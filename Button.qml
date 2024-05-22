@@ -5,6 +5,7 @@ MouseArea {
     height: label.height
     property alias label: label;
     property alias background: background
+    property string type;
     Rectangle {
         id:background
         anchors {fill: parent; centerIn: parent }
@@ -14,7 +15,7 @@ MouseArea {
     Text {
         anchors.centerIn: parent
         id: label
-        font.pixelSize: 18
-        padding: 10
+        font.pixelSize: 16
+        padding: 5
     }
 }

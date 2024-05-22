@@ -11,14 +11,23 @@ Window {
     ContactsModel {
         id: contactsModel
     }
+    Component {
+        id: sectionHeading
+        Text {
+            text: section.charAt(0).toUpperCase()
+            font.bold: true
+            font.pixelSize: 16
+            x : 30
+        }
+    }
+
+
     ListView {
         id: listView
         anchors {top: header.bottom}
         width : parent.width
         height : parent.height - header.height
         model: contactsModel
-
-
         delegate: Rectangle {
             id: delRoot
             width: ListView.view.width
@@ -53,40 +62,30 @@ Window {
             }
         }
 
+        section.property: "name"
+        section.criteria: ViewSection.FirstCharacter
+        section.delegate: sectionHeading
     }
-    Rectangle {
+
+    Header{
         id: header
-        width: parent.width;
-        height: 70
-        anchors.top: parent.top
-        color: "#EBEDEF"
-
-        Text {
-            anchors {verticalCenter: parent.verticalCenter; left: parent.left; leftMargin: 30}
-            text: "Contacts"
-            font.pixelSize: 18
+        addOrSave {
+            label.text : "➕"
+            onClicked : Qt.createComponent("Contact.qml").createObject(root, {callBack: ()=>{}})
+            type: "addContact"
+            visible: true
         }
-        Row {
-            anchors {verticalCenter: parent.verticalCenter; right: parent.right; rightMargin: 20}
-            spacing: 10
-            Button {
-                label.text: "➕"
-
-            }
-            Button {
-                label.text: "🔍"
-            }
+        searchOrcancel {
+            label.text : "🔍"
+            type: "searchContact"
+            visible: true
         }
-
-
-
 
     }
+
     function getRandomHexColor() {
         const randomInt = Math.floor(Math.random() * 0xFFFFFF);
         const hexString = randomInt.toString(16).padStart(6, '0');
         return `#${hexString}`;
     }
-
-
 }
