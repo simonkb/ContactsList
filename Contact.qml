@@ -2,26 +2,26 @@ import QtQuick
 
 Rectangle {
     id:contactRoot
-    width: Screen.width
-    height: Screen.height
+    width: parent.width
+    height: parent.height
     color: "#EBEDEF"
-
+    property var contactModel: null
     property var callBack: ()=>{}
-    MouseArea {anchors.fill: parent}
-
+    MouseArea { anchors.fill: parent }
     clip: true
+
     Column {
         id:column
-        anchors { fill: parent; margins: 20; topMargin: 50}
+        anchors { fill: parent; margins: 20; topMargin: 150}
         spacing: 20
         CustomTextInput {
             id: fullName
-            placeHolder { text: "Full name"}
+            placeHolder : "Full name"
 
         }
         CustomTextInput {
             id: phoneNumber
-            placeHolder { text: "Phone number"}
+            placeHolder  : "Phone number"
 
         }
 

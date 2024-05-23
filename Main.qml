@@ -8,6 +8,7 @@ Window {
     visible: true
     title: qsTr("Contacts")
     color: "#EBEDEF"
+    property int selectedCount: 0
     ContactsModel {
         id: contactsModel
     }
@@ -35,18 +36,19 @@ Window {
             radius: 15
             border.width: 0.5
             border.color: "#EBEDEF"
+            color: selected ? Qt.lighter("orange") : "white"
             Rectangle {
                 anchors { verticalCenter: parent.verticalCenter; left: parent.left; leftMargin: 20 }
                 width: 30
                 height: 30
                 radius: 15
-                color: getRandomHexColor()
+                color: selected ? "orange" : getRandomHexColor()
                 Text {
                     id: intials
                     anchors.centerIn : parent
                     font { pixelSize: 18; }
                     color: "white"
-                    text: name.charAt(0)
+                    text: selected ? "#" : name.charAt(0)
                 }
             }
             Text {
@@ -54,10 +56,23 @@ Window {
                 font {pixelSize: 16}
                 text: name
             }
+
             MouseArea {
                 anchors.fill: parent
+                onPressAndHold: {
+                    if (!selected){
+                        selectedCount +=1
+                        selected = true
+                    }
+                }
                 onClicked: {
-                    console.log("clicked")
+                    if (selectedCount > 0){
+                        selectedCount += selected ? -1 : 1
+                        contactsModel.setSelected(model, !selected)
+                        console.log("Selceted : ", model.selected)
+                    } else {
+                        Qt.createComponent("Contact.qml").createObject(root, {callback: ()=>{}, contactModel : model})
+                    }
                 }
             }
         }
@@ -69,9 +84,13 @@ Window {
 
     Header{
         id: header
+        title: selectedCount > 0 ? selectedCount + " Selected" : "Contacts"
         addOrSave {
-            label.text : "➕"
+            label { text : selectedCount > 0 ? "Delete" : "➕" ; color: selectedCount > 0 ? "white" : "black" }
             onClicked : Qt.createComponent("Contact.qml").createObject(root, {callBack: ()=>{}})
+            background {
+                visible: selectedCount > 0; color: "red"
+            }
             type: "addContact"
             visible: true
         }
@@ -82,6 +101,7 @@ Window {
         }
 
     }
+
 
     function getRandomHexColor() {
         const randomInt = Math.floor(Math.random() * 0xFFFFFF);

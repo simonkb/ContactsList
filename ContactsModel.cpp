@@ -33,28 +33,34 @@ void ContactsModel::addContact(const QVariantMap &contact) {
     endInsertRows();
 }
 void ContactsModel::updateContact(const QVariantMap &contact){
-    for (int i= 0; i<m_contacts.size(); ++i){
-        if (m_contacts.at(i).value("contactId").toInt() == contact.value("contactId").toInt()){
-            if(contact.value("deleted").toInt() == 0){ //Editing existing contact
-                beginInsertRows(QModelIndex(), i,i);
-                m_contacts.replace(i, contact);
+    for (int i= 0; i<m_contacts.size(); ++i) {
+        if (m_contacts.at(i).value("contactId").toInt() == contact.value("contactId").toInt() ) {
+            if ( contact.value("deleted").toInt() == 0) {
+                beginInsertRows(QModelIndex(), i, i);
+                m_contacts[i] = contact;
                 endInsertRows();
-                beginRemoveRows(QModelIndex(), i+1,i+1);
+                beginRemoveRows(QModelIndex(), i+1, i+1);
+                m_contacts.removeAt(i+1);
                 endRemoveRows();
+                // // Use Q_property to emit the siginal
+                // QList<int> list = {1, 2, 3, 4};
+
+                // QModelIndex topLeft = index(i, 0);
+                // QModelIndex bottomRight = index(i, 4);
+                // emit dataChanged(topLeft, bottomRight, list);
+
+
                 return;
-            }else { //Deleting existing contact
+            } else {
                 beginRemoveRows(QModelIndex(), i, i);
+                m_contacts.removeAt(i);
                 endRemoveRows();
                 return;
             }
         }
-
     }
-    beginInsertRows(QModelIndex(), rowCount()-1, rowCount()-1); //Add new contact
-    m_contacts.append(contact);
-    endInsertRows();
-    qDebug() << "Created: " << contact;
 }
+
 
 int ContactsModel::rowCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
@@ -73,6 +79,8 @@ QVariant ContactsModel::data(const QModelIndex &index, int role) const {
         return contact["phoneNumber"];
     case SelectedRole:
         return contact["selected"];
+    case ContactId :
+        return contact["contactId"];
     default:
         return QVariant();
     }
@@ -92,8 +100,8 @@ void ContactsModel :: updateContacts(const QString &jsonString){
         updateContact(contact.toMap());
     }
     sortVariantMapList(m_contacts);
-
 }
+
 void ContactsModel::loadDeviceContacts(const QString &jsonString) {
     QVariantList list = QJsonDocument::fromJson(jsonString.toUtf8()).toVariant().toList();
     m_contacts.clear();

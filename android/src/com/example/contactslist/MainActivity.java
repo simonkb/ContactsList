@@ -43,7 +43,7 @@ public class MainActivity extends QtActivity {
     private void setupContactsObserver() {
         contactsObserver = new ContentObserver(new Handler()) {
             @Override
-            public void onChange(boolean selfChange, Uri uri) {
+            public void onChange(boolean selfChange, Uri uri, int flag) {
                 super.onChange(selfChange, uri);
                 fetchUpdatedContacts();
             }
@@ -55,6 +55,7 @@ public class MainActivity extends QtActivity {
         super.onDestroy();
         getContentResolver().unregisterContentObserver(contactsObserver);
     }
+    
     public void fetchContacts(long ptr) {
         Executors.newSingleThreadExecutor().execute(() -> {
             this.threadPointer = ptr;
@@ -74,6 +75,7 @@ public class MainActivity extends QtActivity {
                         contact.put("name", name);
                         contact.put("phoneNumber", phoneNumber);
                         contact.put("contactId", contactId);
+                        contact.put("selected", false);
                         contact.put("deleted", 0);
 
                         contactsArray.put(contact);
@@ -106,6 +108,7 @@ public class MainActivity extends QtActivity {
                         contact.put("name", name);
                         contact.put("phoneNumber", phoneNumber);
                         contact.put("contactId", contactId);
+                        contact.put("selected", false);
                         contact.put("deleted", 0);
                         contactsArray.put(contact);
                     }
@@ -130,6 +133,7 @@ public class MainActivity extends QtActivity {
                            contact.put("name", name);
                            contact.put("phoneNumber", phoneNumber);
                            contact.put("contactId", contactId);
+                           contact.put("selected", false);
                            contact.put("deleted", 1);
                            contactsArray.put(contact);
                        }
