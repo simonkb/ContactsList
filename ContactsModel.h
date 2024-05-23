@@ -24,12 +24,17 @@ public:
     ContactsModel(QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+
 public slots:
     void addContact(const QVariantMap &contact);
     void updateContact(const QVariantMap &contact);
     void updateContacts(const QString &contacts);
+    void deleteContacts(const QString &contacts);
+    void deleteContact(const QVariantMap &contact);
     void loadDeviceContacts(const QString &contacts);
     void fetchContacts();
+    Q_INVOKABLE void setSelected(string id, bool isSelected);
+    Q_INVOKABLE void onDeleteContactsClicked();
 
 
 protected:

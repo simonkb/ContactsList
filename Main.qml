@@ -12,17 +12,6 @@ Window {
     ContactsModel {
         id: contactsModel
     }
-    Component {
-        id: sectionHeading
-        Text {
-            text: section.charAt(0).toUpperCase()
-            font.bold: true
-            font.pixelSize: 16
-            x : 30
-        }
-    }
-
-
     ListView {
         id: listView
         anchors {top: header.bottom}
@@ -62,14 +51,13 @@ Window {
                 onPressAndHold: {
                     if (!selected){
                         selectedCount +=1
-                        selected = true
+                        contactsModel.setSelected(model.id, true)
                     }
                 }
                 onClicked: {
                     if (selectedCount > 0){
                         selectedCount += selected ? -1 : 1
-                        contactsModel.setSelected(model, !selected)
-                        console.log("Selceted : ", model.selected)
+                        contactsModel.setSelected(model.id, !selected)
                     } else {
                         Qt.createComponent("Contact.qml").createObject(root, {callback: ()=>{}, contactModel : model})
                     }
@@ -79,7 +67,12 @@ Window {
 
         section.property: "name"
         section.criteria: ViewSection.FirstCharacter
-        section.delegate: sectionHeading
+        section.delegate: Text {
+            text: section.charAt(0).toUpperCase()
+            font.bold: true
+            font.pixelSize: 16
+            x : 30
+        }
     }
 
     Header{
@@ -87,7 +80,13 @@ Window {
         title: selectedCount > 0 ? selectedCount + " Selected" : "Contacts"
         addOrSave {
             label { text : selectedCount > 0 ? "Delete" : "➕" ; color: selectedCount > 0 ? "white" : "black" }
-            onClicked : Qt.createComponent("Contact.qml").createObject(root, {callBack: ()=>{}})
+            onClicked : {
+                if(selectedCount > 0) {
+                    contactsModel.onDeleteContactsClicked()
+                } else {
+                    Qt.createComponent("Contact.qml").createObject(root, {callBack: ()=>{}})
+                }
+            }
             background {
                 visible: selectedCount > 0; color: "red"
             }

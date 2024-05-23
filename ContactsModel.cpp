@@ -1,5 +1,7 @@
 #include "ContactsModel.h"
 #include <jni.h>
+#include <string>
+
 ContactsModel::ContactsModel(QObject *parent)
     : QAbstractListModel(parent) {
     fetchContacts();
@@ -10,11 +12,16 @@ extern "C" JNIEXPORT void JNICALL Java_com_example_contactslist_MainActivity_onC
     if (contactsModel)
         contactsModel->loadDeviceContacts(contacts);
 }
-extern "C" JNIEXPORT void JNICALL Java_com_example_contactslist_MainActivity_onContactsChanged(JNIEnv *env, jobject obj, jstring str, jlong ptr) {
+extern "C" JNIEXPORT void JNICALL Java_com_example_contactslist_MainActivity_onContactsChanged(JNIEnv *env, jobject obj, jstring str, jlong ptr, jstring action) {
     QString contacts = env->GetStringUTFChars(str, nullptr);
+    QString actionStr = env->GetStringUTFChars(str, nullptr);
     ContactsModel *contactsModel = (ContactsModel*)ptr;
-    if (contactsModel)
-        contactsModel->updateContacts(contacts);
+    if (contactsModel){
+        if(actionStr == "delete")
+            contactsModel->deleteContacts(contacts);
+        else
+            contactsModel->updateContacts(contacts);
+    }
 }
 
 bool compareMaps(const QVariantMap &map1, const QVariantMap &map2) {
@@ -32,33 +39,33 @@ void ContactsModel::addContact(const QVariantMap &contact) {
     m_contacts.append(contact);
     endInsertRows();
 }
+void ContactsModel::deleteContact(const QVariantMap &contact){
+    for (int i= 0; i<m_contacts.size(); ++i) {
+        if (m_contacts.at(i).value("contactId").toInt() == contact.value("contactId").toInt() ) {
+            beginRemoveRows(QModelIndex(), i, i);
+            m_contacts.removeAt(i);
+            endRemoveRows();
+        }
+    }
+}
+void ContactsModel :: deleteContacts(const QString &jsonString){
+    QVariantList list = QJsonDocument::fromJson(jsonString.toUtf8()).toVariant().toList();
+    for(QVariant contact: list ){
+        deleteContact(contact.toMap());
+    }
+}
 void ContactsModel::updateContact(const QVariantMap &contact){
     for (int i= 0; i<m_contacts.size(); ++i) {
         if (m_contacts.at(i).value("contactId").toInt() == contact.value("contactId").toInt() ) {
-            if ( contact.value("deleted").toInt() == 0) {
-                beginInsertRows(QModelIndex(), i, i);
                 m_contacts[i] = contact;
-                endInsertRows();
-                beginRemoveRows(QModelIndex(), i+1, i+1);
-                m_contacts.removeAt(i+1);
-                endRemoveRows();
-                // // Use Q_property to emit the siginal
-                // QList<int> list = {1, 2, 3, 4};
-
-                // QModelIndex topLeft = index(i, 0);
-                // QModelIndex bottomRight = index(i, 4);
-                // emit dataChanged(topLeft, bottomRight, list);
-
-
+                emit dataChanged(index(i), index(i));
                 return;
-            } else {
-                beginRemoveRows(QModelIndex(), i, i);
-                m_contacts.removeAt(i);
-                endRemoveRows();
-                return;
-            }
+
         }
     }
+    beginInsertColumns(QModelIndex(), rowCount()+1, rowCount()+1);
+    m_contacts.append(contact);
+    endInsertRows();
 }
 
 
@@ -113,5 +120,23 @@ void ContactsModel::loadDeviceContacts(const QString &jsonString) {
 void ContactsModel::fetchContacts(){
     QJniObject javaClass = QNativeInterface::QAndroidApplication::context();
     javaClass.callMethod<void>("fetchContacts", "(J)V", (long long)this);
-
 }
+void ContactsModel::setSelected(string str, bool isSelected){
+    for (int i =0; i < m_contacts.size(); ++i ){
+        if(m_contacts.at(i).value("contactID").toInt() == std::stoi(str)){
+            m_contacts.at(i).value("selected").setValue(isSelected);
+            emit dataChanged(index(i), index(i));
+        }
+    }
+}
+
+void ContactsModel::onDeleteContactsClicked () {
+    QStringList ids;
+    for (const QVariantMap &map : m_contacts) {
+        ids.append(map.value("contactId").toString());
+    }
+    QString idsString = ids.join(",");
+    QJniObject javaClass = QNativeInterface::QAndroidApplication::context();
+    javaClass.callMethod<void>("deleteSelectedContacts", "(J)V", (long long)this);
+}
+
