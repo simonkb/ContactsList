@@ -1,6 +1,5 @@
 #include "ContactsModel.h"
 #include <jni.h>
-#include <string>
 
 ContactsModel::ContactsModel(QObject *parent)
     : QAbstractListModel(parent) {
@@ -14,10 +13,10 @@ extern "C" JNIEXPORT void JNICALL Java_com_example_contactslist_MainActivity_onC
 }
 extern "C" JNIEXPORT void JNICALL Java_com_example_contactslist_MainActivity_onContactsChanged(JNIEnv *env, jobject obj, jstring str, jlong ptr, jstring action) {
     QString contacts = env->GetStringUTFChars(str, nullptr);
-    QString actionStr = env->GetStringUTFChars(str, nullptr);
+    QString actionStr = env->GetStringUTFChars(action, nullptr);
     ContactsModel *contactsModel = (ContactsModel*)ptr;
     if (contactsModel){
-        if(actionStr == "delete")
+        if(actionStr.toStdString() == "deleted")
             contactsModel->deleteContacts(contacts);
         else
             contactsModel->updateContacts(contacts);
@@ -32,6 +31,7 @@ bool compareMaps(const QVariantMap &map1, const QVariantMap &map2) {
 
 void sortVariantMapList(QList<QVariantMap> &list) {
     std::sort(list.begin(), list.end(), compareMaps);
+
 }
 
 void ContactsModel::addContact(const QVariantMap &contact) {
@@ -60,15 +60,12 @@ void ContactsModel::updateContact(const QVariantMap &contact){
                 m_contacts[i] = contact;
                 emit dataChanged(index(i), index(i));
                 return;
-
         }
     }
     beginInsertColumns(QModelIndex(), rowCount()+1, rowCount()+1);
     m_contacts.append(contact);
     endInsertRows();
 }
-
-
 int ContactsModel::rowCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
     return m_contacts.size();
@@ -107,6 +104,7 @@ void ContactsModel :: updateContacts(const QString &jsonString){
         updateContact(contact.toMap());
     }
     sortVariantMapList(m_contacts);
+    emit dataChanged(index(0), index(m_contacts.size()-1));
 }
 
 void ContactsModel::loadDeviceContacts(const QString &jsonString) {
@@ -116,6 +114,7 @@ void ContactsModel::loadDeviceContacts(const QString &jsonString) {
         addContact(contact.toMap());
     }
     sortVariantMapList(m_contacts);
+    emit dataChanged(index(0), index(m_contacts.size()-1));
 }
 void ContactsModel::fetchContacts(){
     QJniObject javaClass = QNativeInterface::QAndroidApplication::context();
@@ -162,6 +161,7 @@ void ContactsModel::onDeleteContactsClicked () {
     QString idsString = ids.join(",");
     QJniObject javaClass = QNativeInterface::QAndroidApplication::context();
      javaClass.callMethod<void>("deleteSelectedContacts", "(Ljava/lang/String;)V", QJniObject::fromString(idsString).object<jstring>());
+
 }
 
 void ContactsModel::onSaveContactsClicked(const QString &name, const QString &phoneNumber, const QString &contactId, const QString &action) {

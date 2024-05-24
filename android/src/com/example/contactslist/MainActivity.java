@@ -56,6 +56,7 @@ public class MainActivity extends QtActivity {
     }
     @SuppressLint("Range")
     public String fetch(String action) {
+
         JSONArray contactsArray = new JSONArray();
         ContentResolver contentResolver = getContentResolver();
 
@@ -120,9 +121,7 @@ public class MainActivity extends QtActivity {
         }
         executor.execute(() -> {
             this.threadPointer = ptr;
-            runOnUiThread(()->{
-                onContactsLoaded(fetch("load"), ptr);
-            });
+            onContactsLoaded(fetch("load"), ptr);
             lastFetchTimestamp = System.currentTimeMillis();
         });
     }
@@ -158,8 +157,6 @@ public class MainActivity extends QtActivity {
                 }
             }
         });
-
-
     }
 
     public static void addContact(Context context, String phoneNumber, String fullName) {

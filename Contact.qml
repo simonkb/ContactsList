@@ -40,7 +40,6 @@ Rectangle {
                         if(contactModel) {
                             callBack(fullName.text,  phoneNumber.text, contactModel.contactId, "edit")
                         }else {
-
                             callBack(fullName.text,  phoneNumber.text, "", "add")
                         }
                         contactRoot.destroy()
