@@ -1,5 +1,6 @@
 package com.example.contactslist;
-
+import android.content.ContentProviderOperation;
+import android.content.Context;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
@@ -19,6 +20,7 @@ import org.qtproject.qt.android.bindings.QtActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.app.ActivityCompat;
 
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -34,15 +36,7 @@ public class MainActivity extends QtActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        checkPermission();
         setupContactsObserver();
-
-    }
-
-    private void checkPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS}, 1);
-        }
 
     }
     private void setupContactsObserver() {
@@ -50,8 +44,6 @@ public class MainActivity extends QtActivity {
             @Override
             public void onChange(boolean selfChange, Uri uri, int flag) {
                 super.onChange(selfChange, uri);
-                // 0 for delete
-                // 1 for edited and new contact
                 fetchUpdatedContacts(flag);
             }
         };
@@ -121,7 +113,11 @@ public class MainActivity extends QtActivity {
         }
         return contentResolver.query(uri, null, selection, selectionArgs, null);
     }
-        public void fetchContacts(long ptr) {
+    public void fetchContacts(long ptr) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS}, 1);
+            return;
+        }
         executor.execute(() -> {
             this.threadPointer = ptr;
             runOnUiThread(()->{
@@ -131,6 +127,10 @@ public class MainActivity extends QtActivity {
         });
     }
     public void fetchUpdatedContacts(int flag) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS}, 1);
+            return;
+        }
         executor.execute(() -> {
             String action = (flag == 0) ? "deleted" : "updated";
             String contactsJson = fetch(action);
@@ -141,6 +141,10 @@ public class MainActivity extends QtActivity {
         });
     }
     public void deleteSelectedContacts(String contacts){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS}, 1);
+            return;
+        }
         executor.execute(() ->{
             String[] contactIds = contacts.split(",");
             for (String contactId : contactIds) {
@@ -156,5 +160,90 @@ public class MainActivity extends QtActivity {
         });
 
 
+    }
+
+    public static void addContact(Context context, String phoneNumber, String fullName) {
+        ArrayList<ContentProviderOperation> operations = new ArrayList<>();
+
+        operations.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
+                .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
+                .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
+                .build());
+
+        if (fullName != null) {
+            operations.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                    .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, fullName)
+                    .build());
+        }
+
+        if (phoneNumber != null) {
+            operations.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                    .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phoneNumber)
+                    .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
+                    .build());
+        }
+
+        try {
+            context.getContentResolver().applyBatch(ContactsContract.AUTHORITY, operations);
+            Log.d("MainActivity", "Contact Added");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public static void editContact(Context context, String contactId, String fullName, String phoneNumber) {
+        ArrayList<ContentProviderOperation> operations = new ArrayList<>();
+
+        if (fullName != null) {
+            operations.add(ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+                    .withSelection(ContactsContract.Data.CONTACT_ID + "=? AND " +
+                                    ContactsContract.Data.MIMETYPE + "=?",
+                            new String[]{String.valueOf(contactId),
+                                    ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE})
+                    .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, fullName)
+                    .build());
+        }
+
+        if (phoneNumber != null) {
+            operations.add(ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+                    .withSelection(ContactsContract.Data.CONTACT_ID + "=? AND " +
+                                    ContactsContract.Data.MIMETYPE + "=? AND " +
+                                    ContactsContract.CommonDataKinds.Phone.TYPE + "=?",
+                            new String[]{String.valueOf(contactId),
+                                    ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE,
+                                    String.valueOf(ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)})
+                    .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phoneNumber)
+                    .build());
+        }
+        try {
+            context.getContentResolver().applyBatch(ContactsContract.AUTHORITY, operations);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addOrUpdateContact(String contactJson, String action) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS}, 1);
+            return;
+        }
+        try {
+            JSONObject contactObject = new JSONObject(contactJson);
+            String name = contactObject.getString("name");
+            String phoneNumber = contactObject.getString("phoneNumber");
+            String contactId = contactObject.getString("contactId");
+            if ("edit".equals(action)) {
+               editContact(this, contactId, name, phoneNumber);
+            } else if ("add".equals(action)) {
+               addContact(this, phoneNumber, name);
+            } else {
+                Log.e("MainActivity", "Invalid action: " + action);
+            }
+        } catch (Exception e) {
+            Log.e("MainActivity", "Error adding or updating contact", e);
+        }
     }
 }

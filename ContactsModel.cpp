@@ -121,22 +121,53 @@ void ContactsModel::fetchContacts(){
     QJniObject javaClass = QNativeInterface::QAndroidApplication::context();
     javaClass.callMethod<void>("fetchContacts", "(J)V", (long long)this);
 }
-void ContactsModel::setSelected(string str, bool isSelected){
-    for (int i =0; i < m_contacts.size(); ++i ){
-        if(m_contacts.at(i).value("contactID").toInt() == std::stoi(str)){
-            m_contacts.at(i).value("selected").setValue(isSelected);
-            emit dataChanged(index(i), index(i));
+bool ContactsModel::setData(const QModelIndex &index, const QVariant &value, int role) {
+    if (!index.isValid() || index.row() >= m_contacts.size())
+        return false;
+
+    QVariantMap &contact = m_contacts[index.row()];
+    bool changed = false;
+    switch (role) {
+    case NameRole:
+        if (contact["name"] != value.toString()) {
+            contact["name"] = value.toString();
+            changed = true;
         }
+        break;
+    case PhoneNumberRole:
+        if (contact["phone"] != value.toString()) {
+            contact["phone"] = value.toString();
+            changed = true;
+        }
+        break;
+    case SelectedRole:
+        contact["selected"] = value.toBool();
+        changed = true;
+        break;
     }
+
+    if (changed) {
+        emit dataChanged(index, index, QVector<int>() << role);
+        return true;
+    }
+    return false;
 }
 
 void ContactsModel::onDeleteContactsClicked () {
     QStringList ids;
     for (const QVariantMap &map : m_contacts) {
-        ids.append(map.value("contactId").toString());
+        if(map["selected"].toBool())
+            ids.append(map.value("contactId").toString());
     }
     QString idsString = ids.join(",");
     QJniObject javaClass = QNativeInterface::QAndroidApplication::context();
-    javaClass.callMethod<void>("deleteSelectedContacts", "(J)V", (long long)this);
+     javaClass.callMethod<void>("deleteSelectedContacts", "(Ljava/lang/String;)V", QJniObject::fromString(idsString).object<jstring>());
 }
+
+void ContactsModel::onSaveContactsClicked(const QString &name, const QString &phoneNumber, const QString &contactId, const QString &action) {
+    QJniObject javaClass = QNativeInterface::QAndroidApplication::context();
+    QString contactJson = QStringLiteral("{\"name\":\"%1\",\"phoneNumber\":\"%2\",\"contactId\":\"%3\"}").arg(name, phoneNumber, contactId);
+    javaClass.callMethod<void>("addOrUpdateContact", "(Ljava/lang/String;Ljava/lang/String;)V", QJniObject::fromString(contactJson).object<jstring>(), QJniObject::fromString(action).object<jstring>());
+}
+
 

@@ -12,6 +12,7 @@ Window {
     ContactsModel {
         id: contactsModel
     }
+
     ListView {
         id: listView
         anchors {top: header.bottom}
@@ -37,7 +38,7 @@ Window {
                     anchors.centerIn : parent
                     font { pixelSize: 18; }
                     color: "white"
-                    text: selected ? "#" : name.charAt(0)
+                    text: selected ? "✓" : name.charAt(0)
                 }
             }
             Text {
@@ -51,15 +52,15 @@ Window {
                 onPressAndHold: {
                     if (!selected){
                         selectedCount +=1
-                        contactsModel.setSelected(model.id, true)
+                        selected = true
                     }
                 }
                 onClicked: {
                     if (selectedCount > 0){
                         selectedCount += selected ? -1 : 1
-                        contactsModel.setSelected(model.id, !selected)
+                        selected = !selected
                     } else {
-                        Qt.createComponent("Contact.qml").createObject(root, {callback: ()=>{}, contactModel : model})
+                        Qt.createComponent("Contact.qml").createObject(root, {callBack: contactsModel.onSaveContactsClicked, contactModel: model})
                     }
                 }
             }
@@ -83,8 +84,9 @@ Window {
             onClicked : {
                 if(selectedCount > 0) {
                     contactsModel.onDeleteContactsClicked()
+                    selectedCount = 0
                 } else {
-                    Qt.createComponent("Contact.qml").createObject(root, {callBack: ()=>{}})
+                    Qt.createComponent("Contact.qml").createObject(root, {callBack: contactsModel.onSaveContactsClicked})
                 }
             }
             background {

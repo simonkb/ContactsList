@@ -1,4 +1,5 @@
 import QtQuick
+// pragma NativeMethodBehavior: AcceptThisObject
 
 Rectangle {
     id:contactRoot
@@ -16,11 +17,13 @@ Rectangle {
         spacing: 20
         CustomTextInput {
             id: fullName
+            text: contactModel ? contactModel.name : ""
             placeHolder : "Full name"
 
         }
         CustomTextInput {
             id: phoneNumber
+            text: contactModel ? contactModel.phoneNumber: ""
             placeHolder  : "Phone number"
 
         }
@@ -33,8 +36,18 @@ Rectangle {
                 label.color: "white"
                 background.color: "green"
                 onClicked: {
-                    contactRoot.destroy()
-                    //to be implemented
+                    if (fullName.text !== "" && phoneNumber.text !== ""){
+                        if(contactModel) {
+                            callBack(fullName.text,  phoneNumber.text, contactModel.contactId, "edit")
+                        }else {
+
+                            callBack(fullName.text,  phoneNumber.text, "", "add")
+                        }
+                        contactRoot.destroy()
+
+                    }
+                    fullName.text = ""
+                    phoneNumber.text = ""
                 }
             }
             Button {
@@ -53,7 +66,7 @@ Rectangle {
 
 
     Header {
-        title: "Create Contact"
+        title: contactModel ? "Edit Contact" : "Create Contact"
     }
 
 }
