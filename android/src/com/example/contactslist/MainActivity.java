@@ -142,10 +142,12 @@ public class MainActivity extends QtActivity {
         }
         return contentResolver.query(uri, null, selection, selectionArgs, null);
     }
-
+    private void setThreadPointer(long ptr){
+        this.threadPointer = ptr;
+    }
     public void fetchContacts(long ptr) {
         fetch("load", result -> {
-            this.threadPointer = ptr;
+            setThreadPointer(ptr);
             onContactsLoaded(result, ptr);
             lastFetchTimestamp = System.currentTimeMillis();
         });
