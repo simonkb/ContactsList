@@ -24,6 +24,10 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+interface ExecutorCallback {
+    void onComplete(String result);
+}
+
 public class MainActivity extends QtActivity {
     public long threadPointer;
     public long lastFetchTimestamp = 0;
@@ -55,7 +59,7 @@ public class MainActivity extends QtActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            fetchContacts(this.threadPointer);
+            Log.d("MainActivity", "Permission granted");
         } else {
             Log.d("MainActivity", "Permission not granted");
         }
@@ -81,40 +85,39 @@ public class MainActivity extends QtActivity {
     }
 
     @SuppressLint("Range")
-    public String fetch(String action) {
-        JSONArray contactsArray = new JSONArray();
-        if (checkPermission()) {
-            ContentResolver contentResolver = getContentResolver();
-            try (Cursor cursor = getCursorForAction(contentResolver, action)) {
-                if (cursor != null && cursor.getCount() > 0) {
-                    while (cursor.moveToNext()) {
-                        String name = "";
-                        String phoneNumber = "";
-                        String contactId = "";
-                        JSONObject contact = new JSONObject();
-                        if ("deleted".equals(action)) {
-                            contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.DeletedContacts.CONTACT_ID));
-                        } else {
-                            name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                            phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                            contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID));
+    public void fetch(String action, ExecutorCallback callback) {
+        executor.execute(() -> {
+            JSONArray contactsArray = new JSONArray();
+            if (checkPermission()) {
+                ContentResolver contentResolver = getContentResolver();
+                try (Cursor cursor = getCursorForAction(contentResolver, action)) {
+                    if (cursor != null && cursor.getCount() > 0) {
+                        while (cursor.moveToNext()) {
+                            String name = "";
+                            String phoneNumber = "";
+                            String contactId = "";
+                            JSONObject contact = new JSONObject();
+                            if ("deleted".equals(action)) {
+                                contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.DeletedContacts.CONTACT_ID));
+                            } else {
+                                name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                                phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                                contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID));
+                            }
+                            contact.put("name", name);
+                            contact.put("phoneNumber", phoneNumber);
+                            contact.put("contactId", contactId);
+                            contact.put("selected", false);
+                            contactsArray.put(contact);
                         }
-                        contact.put("name", name);
-                        contact.put("phoneNumber", phoneNumber);
-                        contact.put("contactId", contactId);
-                        contact.put("selected", false);
-                        contactsArray.put(contact);
                     }
+                } catch (Exception e) {
+                    Log.e("MainActivity", "Error fetching contacts", e);
                 }
-            } catch (Exception e) {
-                Log.e("MainActivity", "Error fetching contacts", e);
             }
-
-
-        }
-        return contactsArray.toString();
+            callback.onComplete(contactsArray.toString());
+        });
     }
-
     private Cursor getCursorForAction(ContentResolver contentResolver, String action) {
         Uri uri;
         String selection;
@@ -141,23 +144,22 @@ public class MainActivity extends QtActivity {
     }
 
     public void fetchContacts(long ptr) {
-        executor.execute(() -> {
+        fetch("load", result -> {
             this.threadPointer = ptr;
-            onContactsLoaded(fetch("load"), ptr);
+            onContactsLoaded(result, ptr);
             lastFetchTimestamp = System.currentTimeMillis();
         });
     }
 
     public void fetchUpdatedContacts(int flag) {
-        executor.execute(() -> {
-            String action = (flag == 0) ? "deleted" : "updated";
-            String contactsJson = fetch(action);
-            onContactsChanged(contactsJson, this.threadPointer, action);
+        String action = (flag == 0) ? "deleted" : "updated";
+        fetch(action, result -> {
+            onContactsChanged(result, this.threadPointer, action);
             lastFetchTimestamp = System.currentTimeMillis();
         });
     }
 
-    public void deleteSelectedContacts(String contacts) {
+    public void deleteContacts(String contacts) {
         if (checkPermission()) {
             executor.execute(() -> {
                 String[] contactIds = contacts.split(",");
