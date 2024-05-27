@@ -34,10 +34,8 @@ public slots:
     void deleteContact(const QVariantMap &contact);
     void loadDeviceContacts(const QString &contacts);
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
-    Q_INVOKABLE void onDeleteContactsClicked();
-    // Q_INVOKABLE void onSaveContactsClicked(const QVariant &contact, const QString &action);
-    Q_INVOKABLE void onSaveContactsClicked(const QString &name, const QString &phoneNumber, const QString &contactId, const QString &action);
-
+    Q_INVOKABLE void onDeleteContacts();
+    Q_INVOKABLE void onSaveContact(const QString &contact, const QString &action);
 protected:
     QHash<int, QByteArray> roleNames() const override;
 

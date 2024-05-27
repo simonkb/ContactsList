@@ -128,7 +128,6 @@ void ContactsModel :: updateContacts (const QString &jsonString){
 bool ContactsModel::setData (const QModelIndex &index, const QVariant &value, int role) {
     if (!index.isValid() || index.row() >= m_contacts.size())
         return false;
-
     QVariantMap &contact = m_contacts[index.row()];
     bool changed = false;
     switch (role) {
@@ -156,8 +155,7 @@ bool ContactsModel::setData (const QModelIndex &index, const QVariant &value, in
     }
     return false;
 }
-
-void ContactsModel::onDeleteContactsClicked () {
+void ContactsModel::onDeleteContacts() {
     QStringList ids;
     for (const QVariantMap &map : m_contacts) {
         if(map["selected"].toBool())
@@ -167,11 +165,8 @@ void ContactsModel::onDeleteContactsClicked () {
     QJniObject javaClass = QNativeInterface::QAndroidApplication::context();
     javaClass.callMethod<void>("deleteContacts", "(Ljava/lang/String;)V", QJniObject::fromString(idsString).object<jstring>());
 }
-
-void ContactsModel::onSaveContactsClicked (const QString &name, const QString &phoneNumber, const QString &contactId, const QString &action) {
+void ContactsModel::onSaveContact (const QString &contactJson, const QString &action) {
     QJniObject javaClass = QNativeInterface::QAndroidApplication::context();
-    QString contactJson = QStringLiteral("{\"name\":\"%1\",\"phoneNumber\":\"%2\",\"contactId\":\"%3\"}").arg(name, phoneNumber, contactId);
     javaClass.callMethod<void>("saveContact", "(Ljava/lang/String;Ljava/lang/String;)V", QJniObject::fromString(contactJson).object<jstring>(), QJniObject::fromString(action).object<jstring>());
 }
-
 
