@@ -12,7 +12,6 @@ Window {
     ContactsModel {
         id: contactsModel
     }
-
     ListView {
         id: listView
         anchors {top: header.bottom}
@@ -60,7 +59,7 @@ Window {
                         selectedCount += selected ? -1 : 1
                         selected = !selected
                     } else {
-                        Qt.createComponent("Contact.qml").createObject(root, {callBack: contactsModel.onSaveContactsClicked, contactModel: model})
+                        Qt.createComponent("ContactView.qml").createObject(root, {callBack: contactsModel.onSaveContactsClicked, contactModel: model})
                     }
                 }
             }
@@ -86,7 +85,7 @@ Window {
                     contactsModel.onDeleteContactsClicked()
                     selectedCount = 0
                 } else {
-                    Qt.createComponent("Contact.qml").createObject(root, {callBack: contactsModel.onSaveContactsClicked})
+                    Qt.createComponent("ContactView.qml").createObject(root, {callBack: contactsModel.onSaveContactsClicked})
                 }
             }
             background {

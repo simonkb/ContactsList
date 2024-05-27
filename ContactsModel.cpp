@@ -167,7 +167,7 @@ void ContactsModel::onDeleteContactsClicked () {
 void ContactsModel::onSaveContactsClicked(const QString &name, const QString &phoneNumber, const QString &contactId, const QString &action) {
     QJniObject javaClass = QNativeInterface::QAndroidApplication::context();
     QString contactJson = QStringLiteral("{\"name\":\"%1\",\"phoneNumber\":\"%2\",\"contactId\":\"%3\"}").arg(name, phoneNumber, contactId);
-    javaClass.callMethod<void>("addOrUpdateContact", "(Ljava/lang/String;Ljava/lang/String;)V", QJniObject::fromString(contactJson).object<jstring>(), QJniObject::fromString(action).object<jstring>());
+    javaClass.callMethod<void>("saveContact", "(Ljava/lang/String;Ljava/lang/String;)V", QJniObject::fromString(contactJson).object<jstring>(), QJniObject::fromString(action).object<jstring>());
 }
 
 

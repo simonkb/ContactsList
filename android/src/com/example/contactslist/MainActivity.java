@@ -1,7 +1,6 @@
 package com.example.contactslist;
 
 import android.content.ContentProviderOperation;
-import android.content.Context;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
@@ -177,7 +176,7 @@ public class MainActivity extends QtActivity {
 
     }
 
-    public void addOrUpdateContact(String contactJson, String action) {
+    public void saveContact(String contactJson, String action) {
         if (checkPermission()) {
             try {
                 JSONObject contactObject = new JSONObject(contactJson);

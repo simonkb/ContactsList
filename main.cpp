@@ -8,7 +8,7 @@
 {
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
-    qmlRegisterType<ContactsModel>("ContactsModel", 1,0, "ContactsModel");
+    qmlRegisterType<ContactsModel>("ContactsModel", 1, 0, "ContactsModel");
     const QUrl url(u"qrc:/ContactsListApp/Main.qml"_qs);
     QObject::connect(
         &engine,

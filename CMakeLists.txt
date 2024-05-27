@@ -19,7 +19,7 @@ qt_add_qml_module(appContactsListApp
 QML_FILES Button.qml
 SOURCES ContactsModel.h
 SOURCES ContactsModel.cpp
-QML_FILES Contact.qml
+QML_FILES ContactView.qml
 QML_FILES Header.qml
 QML_FILES CustomTextInput.qml
        )
