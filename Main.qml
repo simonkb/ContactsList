@@ -57,7 +57,7 @@ Window {
                         selectedCount += selected ? -1 : 1
                         selected = !selected
                     } else {
-                        Qt.createComponent("ContactView.qml").createObject(root, {callBack: contactsModel.onSaveContactsClicked, contactModel: model})
+                        Qt.createComponent("ContactView.qml").createObject(root, {callBack: (param1, param2)=>contactsModel.onSaveContact(param1, param2), contactModel: model})
                     }
                 }
             }
@@ -80,10 +80,10 @@ Window {
             label { text : selectedCount > 0 ? "Delete" : "➕" ; color: selectedCount > 0 ? "white" : "black" }
             onClicked : {
                 if(selectedCount > 0) {
-                    contactsModel.onDeleteContactsClicked()
+                    contactsModel.onDeleteContacts()
                     selectedCount = 0
                 } else {
-                    Qt.createComponent("ContactView.qml").createObject(root, {callBack: contactsModel.onSaveContactsClicked})
+                    Qt.createComponent("ContactView.qml").createObject(root, {callBack: (param1, param2)=>contactsModel.onSaveContact(param1, param2)})
                 }
             }
             background {
@@ -97,7 +97,6 @@ Window {
         }
 
     }
-
 
     function getRandomHexColor() {
         const randomInt = Math.floor(Math.random() * 0xFFFFFF);
