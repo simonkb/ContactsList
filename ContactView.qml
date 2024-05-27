@@ -17,15 +17,18 @@ Rectangle {
         spacing: 20
         CustomTextInput {
             id: fullName
-            text: contactModel ? contactModel.name : ""
+            inputField.text: contactModel ? contactModel.name : ""
             placeHolder : "Full name"
 
         }
         CustomTextInput {
             id: phoneNumber
-            text: contactModel ? contactModel.phoneNumber: ""
-            placeHolder  : "Phone number"
-
+            placeHolder  : "Phone number: +971.."
+            inputField {
+                text: contactModel ? contactModel.phoneNumber: ""
+                validator: RegularExpressionValidator { regularExpression: /^[0-9+]*$/ }
+                maximumLength: 13
+            }
         }
 
         Row {
@@ -36,17 +39,18 @@ Rectangle {
                 label.color: "white"
                 background.color: "green"
                 onClicked: {
-                    if (fullName.text !== "" && phoneNumber.text !== ""){
+                    if (fullName.inputField.text !== "" && phoneNumber.inputField.text !== ""){
                         if(contactModel) {
-                            callBack(fullName.text,  phoneNumber.text, contactModel.contactId, "edit")
+                            callBack(fullName.inputField.text,  phoneNumber.inputField.text, contactModel.contactId, "edit")
                         }else {
-                            callBack(fullName.text,  phoneNumber.text, "", "add")
+                            callBack(fullName.inputField.text,  phoneNumber.inputField.text, "", "add")
                         }
                         contactRoot.destroy()
 
+                        fullName.inputField.text = ""
+                        phoneNumber.inputField.text = ""
                     }
-                    fullName.text = ""
-                    phoneNumber.text = ""
+
                 }
             }
             Button {

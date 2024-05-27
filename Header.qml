@@ -7,8 +7,8 @@ Rectangle {
     anchors.top: parent.top
     color: "#EBEDEF"
     property alias title: headerTitle.text
-    property alias addOrSave: addOrSaveBtn
-    property alias searchOrcancel: searchOrCancelBtn
+    property alias button1: save
+    property alias button2: search
 
     Text {
         id: headerTitle
@@ -20,11 +20,11 @@ Rectangle {
         anchors {verticalCenter: parent.verticalCenter; right: parent.right; rightMargin: 20}
         spacing: 10
         Button {
-            id: addOrSaveBtn
+            id: save
             visible: false
         }
         Button {
-            id: searchOrCancelBtn
+            id: search
             visible: false
         }
     }

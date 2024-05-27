@@ -14,12 +14,11 @@ Window {
     }
     ListView {
         id: listView
-        anchors {top: header.bottom}
+        anchors { top: header.bottom; bottom: parent.bottom }
         width : parent.width
-        height : parent.height - header.height
         model: contactsModel
+        clip: true
         delegate: Rectangle {
-            id: delRoot
             width: ListView.view.width
             height: 40
             radius: 15
@@ -33,7 +32,6 @@ Window {
                 radius: 15
                 color: selected ? "orange" : getRandomHexColor()
                 Text {
-                    id: intials
                     anchors.centerIn : parent
                     font { pixelSize: 18; }
                     color: "white"
@@ -78,7 +76,7 @@ Window {
     Header{
         id: header
         title: selectedCount > 0 ? selectedCount + " Selected" : "Contacts"
-        addOrSave {
+        button1 {
             label { text : selectedCount > 0 ? "Delete" : "➕" ; color: selectedCount > 0 ? "white" : "black" }
             onClicked : {
                 if(selectedCount > 0) {
@@ -91,12 +89,10 @@ Window {
             background {
                 visible: selectedCount > 0; color: "red"
             }
-            type: "addContact"
             visible: true
         }
-        searchOrcancel {
+        button2 {
             label.text : "🔍"
-            type: "searchContact"
             visible: true
         }
 

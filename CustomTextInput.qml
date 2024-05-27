@@ -4,9 +4,9 @@ Rectangle {
     width: parent.width * 0.9
     height: input.height
     radius: 5
-    property alias text:  input.text
     property alias placeHolder: pHolder.text
-    TextEdit {
+    property alias inputField: input
+    TextInput {
         id: input
         padding: 10
         width: parent.width
@@ -25,6 +25,7 @@ Rectangle {
                 parent.border.color = "white"
             }
         }
+
         Text {
               id: pHolder
               verticalAlignment: Text.AlignVCenter
