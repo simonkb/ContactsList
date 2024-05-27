@@ -26,7 +26,6 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
 public slots:
-    void modifyContacts(const QString &jsonString, const QString &action);
     void addContact(const QVariantMap &contact);
     void updateContact(const QVariantMap &contact);
     void updateContacts(const QString &contacts);

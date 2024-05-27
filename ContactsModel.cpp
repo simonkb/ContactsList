@@ -13,8 +13,13 @@ extern "C" JNIEXPORT void JNICALL Java_com_example_contactslist_MainActivity_onC
     QString contacts = env->GetStringUTFChars(str, nullptr);
     QString actionStr = env->GetStringUTFChars(action, nullptr);
     ContactsModel *contactsModel = (ContactsModel*)ptr;
-    if (contactsModel)
-        QMetaObject::invokeMethod(contactsModel, "modifyContacts", Qt::QueuedConnection, Q_ARG(QString, contacts), Q_ARG(QString, actionStr));
+    if (contactsModel) {
+        if(actionStr =="deleted"){
+            QMetaObject::invokeMethod(contactsModel, "deleteContacts", Qt::QueuedConnection, Q_ARG(QString, contacts));
+        }else{
+            QMetaObject::invokeMethod(contactsModel, "updateContacts",  Qt::QueuedConnection, Q_ARG(QString, contacts));
+        }
+    }
 }
 
 ContactsModel::ContactsModel(QObject *parent)
@@ -35,20 +40,12 @@ void sortVariantMapList(QList<QVariantMap> &list) {
 void ContactsModel::loadDeviceContacts(const QString &jsonString) {
     QVariantList list = QJsonDocument::fromJson(jsonString.toUtf8()).toVariant().toList();
     m_contacts.clear();
-    for(QVariant contact: list ){
+    for (const QVariant &contact: list ){
         addContact(contact.toMap());
     }
     sortVariantMapList(m_contacts);
     emit dataChanged(index(0), index(m_contacts.size()-1));
 }
-
-void ContactsModel::modifyContacts(const QString &jsonString, const QString &action) {
-    if(action == "deleted")
-        deleteContacts(jsonString);
-    else
-        updateContacts(jsonString);
-}
-
 void ContactsModel::addContact(const QVariantMap &contact) {
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
     m_contacts.append(contact);
@@ -67,7 +64,7 @@ void ContactsModel::deleteContact(const QVariantMap &contact){
 
 void ContactsModel :: deleteContacts(const QString &jsonString){
     QVariantList list = QJsonDocument::fromJson(jsonString.toUtf8()).toVariant().toList();
-    for(QVariant contact: list ){
+    for(const QVariant &contact: list ){
         deleteContact(contact.toMap());
     }
 }
@@ -75,9 +72,9 @@ void ContactsModel :: deleteContacts(const QString &jsonString){
 void ContactsModel::updateContact(const QVariantMap &contact){
     for (int i= 0; i<m_contacts.size(); ++i) {
         if (m_contacts.at(i).value("contactId").toInt() == contact.value("contactId").toInt() ) {
-                m_contacts[i] = contact;
-                emit dataChanged(index(i), index(i));
-                return;
+            m_contacts[i] = contact;
+            emit dataChanged(index(i), index(i));
+            return;
         }
     }
     beginInsertColumns(QModelIndex(), rowCount()+1, rowCount()+1);
@@ -118,7 +115,7 @@ QHash<int, QByteArray> ContactsModel::roleNames() const {
 }
 void ContactsModel :: updateContacts (const QString &jsonString){
     QVariantList list = QJsonDocument::fromJson(jsonString.toUtf8()).toVariant().toList();
-    for(QVariant contact: list ){
+    for(const QVariant &contact: list ){
         updateContact(contact.toMap());
     }
     sortVariantMapList(m_contacts);
