@@ -1,5 +1,4 @@
 import QtQuick
-// pragma NativeMethodBehavior: AcceptThisObject
 
 Rectangle {
     id:contactRoot
@@ -41,9 +40,9 @@ Rectangle {
                 onClicked: {
                     if (fullName.inputField.text !== "" && phoneNumber.inputField.text !== ""){
                         if(contactModel) {
-                            callBack(fullName.inputField.text,  phoneNumber.inputField.text, contactModel.contactId, "edit")
+                            callBack(JSON.stringify({"name": fullName.inputField.text,  "phoneNumber": phoneNumber.inputField.text, "contactId": contactModel.contactId}), "edit")
                         }else {
-                            callBack(fullName.inputField.text,  phoneNumber.inputField.text, "", "add")
+                            callBack(JSON.stringify({"name": fullName.inputField.text,  "phoneNumber": phoneNumber.inputField.text, "contactId": "" }), "add")
                         }
                         contactRoot.destroy()
 
