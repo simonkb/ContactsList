@@ -1,6 +1,6 @@
 # ContactsList
 
-ContactsList is a Android contact management application built using C++, QML, and CMake. It offers a responsive and intuitive user interface for managing contact information.
+ContactsList is a Android contact management application built using C++, java, QML, and CMake. It offers a responsive and intuitive user interface for managing contact information.
 
 ## Features
 
